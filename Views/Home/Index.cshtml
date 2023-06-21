@@ -1,0 +1,19 @@
+﻿@using ZlagodaPrj.Data;
+@{
+    ViewData["Title"] = "Home Page";
+    string id = UserManager.GetCurrentUserId(Context);
+    string role = UserManager.GetCurrentUserRole(Context);
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+
+    @if (UserManager.IsSignedIn(Context))
+    {
+        <p> You are signed in as an employee with number '@id' with a role of @role</p>
+    }
+    else
+    {
+        <p>You are not signed in</p>
+    }
+</div>

@@ -1,0 +1,97 @@
+﻿@model ZlagodaPrj.Models.ViewModels.Employee.CreateEmployeeVM
+@{
+    ViewData["Title"] = "Register";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row">
+    <div class="col-md-4">
+		<form asp-action="Register" enctype="multipart/form-data" method="post">
+			<h4>Register a new employee</h4>
+			<hr />
+			<div asp-validation-summary="All" class="text-danger"></div>
+			<div class="form-group">
+				<label asp-for="Id"></label>
+				<input asp-for="Id" class="form-control" />
+				<span asp-validation-for="Id" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Surname"></label>
+				<input asp-for="Surname" class="form-control" />
+				<span asp-validation-for="Surname" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Name"></label>
+				<input asp-for="Name" class="form-control" />
+				<span asp-validation-for="Name" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Patronymic"></label>
+				<input asp-for="Patronymic" class="form-control" />
+				<span asp-validation-for="Patronymic" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Salary"></label>
+				<input asp-for="Salary" type="number" class="form-control" />
+				<span asp-validation-for="Salary" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Password"></label>
+				<input asp-for="Password" type="password" class="form-control" />
+				<span asp-validation-for="Password" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="PasswordConfirm"></label>
+				<input asp-for="PasswordConfirm" class="form-control" />
+				<span asp-validation-for="PasswordConfirm" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="BirthDate"></label>
+				<input asp-for="BirthDate" class="form-control" />
+				<span asp-validation-for="BirthDate" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="StartDate"></label>
+				<input asp-for="StartDate" class="form-control" />
+				<span asp-validation-for="StartDate" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Phone"></label>
+				<input asp-for="Phone" class="form-control" />
+				<span asp-validation-for="Phone" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="City"></label>
+				<input asp-for="City" class="form-control" />
+				<span asp-validation-for="City" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Street"></label>
+				<input asp-for="Street" class="form-control" />
+				<span asp-validation-for="Street" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="ZipCode" ></label>
+				<input asp-for="ZipCode" class="form-control" />
+				<span asp-validation-for="ZipCode" class="text-danger"></span>
+			</div>
+			<div class="form-check form-check-inline">
+				<input class="form-check-input" id="ManagerOption" asp-for="Role" name="Role" value="Manager" type="radio">
+				<label class="form-check-label" for="ManagerOption">Register as manager</label>
+			</div>
+			<div class="form-check form-check-inline">
+				<input class="form-check-input" id="CashierOption" asp-for="Role" name="Role" value="Cashier" type="radio">
+				<label class="form-check-label" for="CashierOption">Register as cashier</label>
+			</div>
+
+			<div>
+				<button type="submit" class="btn btn-primary">Register</button>
+			</div>
+		</form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

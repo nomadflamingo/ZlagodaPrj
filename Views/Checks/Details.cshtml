@@ -1,0 +1,87 @@
+﻿@using ZlagodaPrj.Models.DTO;
+@model ZlagodaPrj.Models.DTO.CheckDTO
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Check Info</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Number)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Number)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CashierId)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CashierId)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CardNumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.CardNumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PrintDate)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.PrintDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.SumTotal)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.SumTotal)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Vat)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Vat)
+        </dd>
+    </dl>
+
+    @for (int i = 0; i < Model.Sales.Count; i++)
+    {
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Sales[i].Upc)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Sales[i].Upc)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Sales[i].Price)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Sales[i].Price)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Sales[i].Amount)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Sales[i].Amount)
+            </dd>
+        </dl>
+        <div>
+            @Html.ActionLink("Delete Sale", "Delete", "Sales", new { upc=Model.Sales[i].Upc, checkNumber=Model.Number })
+        </div>
+    }
+    
+</div>
+<hr />
+<div>
+    <a class="btn btn-info" asp-controller="Sales" asp-action="Create" asp-route-parentCheckId="@Model.Number">Add Sale</a>
+</div>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

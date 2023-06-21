@@ -1,0 +1,54 @@
+﻿@model IEnumerable<ZlagodaPrj.Models.DTO.EmployeeDTO>
+
+
+<div class="container p-3">
+    <h1>Employees list</h1>
+
+    <div>
+        <a asp-controller="Employees" asp-action="Index" asp-route-showOnlyCashiers="@false" class="btn btn-primary">Show all employees</a>
+        <a asp-controller="Employees" asp-action="Index" asp-route-showOnlyCashiers="@true" class="btn btn-primary">Show only cashiers</a>
+    </div>
+    <hr/>
+    <table class="table table-bordered table-striped table-fixed" style="width:auto">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Surname</th>
+                <th>Name</th>
+                <th>Patronymic</th>
+                <th>Role</th>
+                <th>Birth Date</th>
+                <th>Start Date</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>Street</th>
+                <th>Zip Code</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emp in Model)
+            {
+                <tr>
+                    <td>@emp.Id</td>
+                    <td>@emp.Surname</td>
+                    <td>@emp.Name</td>
+                    <td>@emp.Patronymic</td>
+                    <td>@emp.Role</td>
+                    <td>@emp.BirthDate</td>
+                    <td>@emp.StartDate</td>
+                    <td>@emp.Phone</td>
+                    <td>@emp.City</td>
+                    <td>@emp.Street</td>
+                    <td>@emp.ZipCode</td>
+                    <td>
+                        <a class="btn btn-primary" asp-action="Update" asp-route-id="@emp.Id">Update</a>
+                        <a class="btn btn-danger" asp-action="Delete" asp-route-id="@emp.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div>
+        <a asp-controller="Employees" asp-action="Register" class="btn btn-primary">Register new Employee</a>
+    </div>
+</div>

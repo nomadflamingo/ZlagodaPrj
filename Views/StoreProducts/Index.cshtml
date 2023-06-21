@@ -1,0 +1,64 @@
+﻿@model IEnumerable<ZlagodaPrj.Models.DTO.StoreProductDTO>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Upc)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UpcProm)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ProductName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Price)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Amount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IsProm)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Upc)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UpcProm)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProductName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Amount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsProm)
+            </td>
+            <td>
+                @Html.ActionLink("Update", "Update", new { id=item.Upc }) |
+                @Html.ActionLink("Delete", "Delete", new { id=item.Upc} )
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
