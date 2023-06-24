@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using ZlagodaPrj.Data;
 using ZlagodaPrj.Models;
 using ZlagodaPrj.Models.DTO;
+using ZlagodaPrj.Models.ViewModels;
 using ZlagodaPrj.Models.ViewModels.CustomerCard;
 using ZlagodaPrj.Models.ViewModels.Product;
 
@@ -192,6 +193,49 @@ namespace ZlagodaPrj.Controllers
 
             // return the view
             return RedirectToAction("Index");
+        }
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> TopProductsByCity(string city)
+        {
+            string cmdText = $"select count(*), pr.{Product.COL_NAME}" +
+                $" from {Product.TABLE_NAME} pr" +
+                $" inner join {StoreProduct.TABLE_NAME} sp" +
+                $"   on sp.{StoreProduct.COL_PRODUCT_ID} = pr.{Product.COL_ID}" +
+                $" inner join {Sale.TABLE_NAME} sa" +
+                $"   on sa.{Sale.COL_UPC} = sp.{StoreProduct.COL_UPC}" +
+                $" inner join {Check.TABLE_NAME} ch" +
+                $"   on ch.{Check.COL_NUMBER} = sa.{Sale.COL_CHECK_NUMBER}" +
+                $" inner join {CustomerCard.TABLE_NAME} cc" +
+                $"   on cc.{CustomerCard.COL_NUMBER} = ch.{Check.COL_CARD_NUMBER}" +
+                $" where cc.{CustomerCard.COL_CITY} = '{city}'" +
+                $" group by pr.{Product.COL_ID}" +
+                $" order by count desc";
+
+            using NpgsqlCommand cmd = await ConnectionManager.CreateCommandAsync(cmdText);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            TopProductsByCityPagedResult result = new()
+            {
+                SearchCityString = city,
+                ProductsInfo = new()
+            };
+
+            while (await reader.ReadAsync())
+            {
+                result.ProductsInfo.Add(new()
+                {
+                    SalesCount = (long)reader["count"],
+                    ProductName = (string)reader[Product.COL_NAME],
+
+                });
+            }
+
+            return View(result);
+
         }
 
 

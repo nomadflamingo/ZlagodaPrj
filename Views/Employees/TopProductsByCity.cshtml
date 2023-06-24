@@ -1,0 +1,43 @@
+﻿@model ZlagodaPrj.Models.ViewModels.TopProductsByCityPagedResult
+
+@{
+    ViewData["Title"] = "TopProductsByCity";
+}
+
+<h3>Top products for customers from a specific city:</h3>
+<h5>Count represents the amount of sales of this product</h5>
+<form class="form-inline" asp-action="TopProductsByCity" method="get">
+    <label for="search-string" class="mb-2 mr-sm-2">Search by city</label>
+    <div class="input-group mb-2 mr-2 flex-grow-1">
+        <input id="search-string" type="text" class="form-control" placeholder="Enter the city..." value="@Model.SearchCityString" name="city">
+        <div class="input-group-append">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Sales Count
+            </th>
+            <th>
+                Product Name
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.ProductsInfo) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.SalesCount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProductName)
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
