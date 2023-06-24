@@ -116,6 +116,22 @@ namespace ZlagodaPrj.Controllers
             if (string.IsNullOrEmpty(upc) || string.IsNullOrEmpty(checkNumber))
                 return NotFound("UPC or checkNumber are not set (or both)");
 
+            IActionResult? result = await DeleteSaleAsync(upc, checkNumber, this);
+            if (result != null) return result;
+
+            // return the view
+            return RedirectToAction("Details", "Checks", new { id = checkNumber });
+        }
+
+
+        private void ValidateModel(CreateUpdateSaleVM model)
+        {
+            if (model.Amount <= 0)
+                ModelState.AddModelError(string.Empty, "Amount should be positive");
+        }
+
+        public static async Task<IActionResult?> DeleteSaleAsync(string upc, string checkNumber, Controller baseController)
+        {
             // get upc amount and selling price from sale record
             using var conGetUpcAmount = ConnectionManager.CreateConnection();
             await conGetUpcAmount.OpenAsync();
@@ -124,9 +140,9 @@ namespace ZlagodaPrj.Controllers
             cmdGetUpcAmount.CommandText = $"" +
                 $"Select {Sale.COL_AMOUNT}, {Sale.COL_SELLING_PRICE} " +
                 $"FROM {Sale.TABLE_NAME} " +
-                $"WHERE {Sale.COL_UPC} = '{upc}'";
+                $"WHERE ({Sale.COL_UPC}, {Sale.COL_CHECK_NUMBER}) = ('{upc}', '{checkNumber}')";
             using NpgsqlDataReader readerGetUpcAmount = await cmdGetUpcAmount.ExecuteReaderAsync();
-            if (!readerGetUpcAmount.HasRows) return NotFound($"Store product with UPC '{upc}' not found");  // should never happen
+            if (!readerGetUpcAmount.HasRows) return baseController.NotFound($"Store product with UPC '{upc}' not found");  // should never happen
             await readerGetUpcAmount.ReadAsync();
             int amount = (int)readerGetUpcAmount[Sale.COL_AMOUNT];
             decimal price = (decimal)readerGetUpcAmount[Sale.COL_SELLING_PRICE];
@@ -170,15 +186,7 @@ namespace ZlagodaPrj.Controllers
                 $" set {StoreProduct.COL_AMOUNT} = {totalAmount} where {StoreProduct.COL_UPC} = '{upc}'";
             await ConnectionManager.ExecuteNonQueryAsync(cmdRestoreStock);
 
-            // return the view
-            return RedirectToAction("Details", "Checks", new { id = checkNumber });
-        }
-
-
-        private void ValidateModel(CreateUpdateSaleVM model)
-        {
-            if (model.Amount <= 0)
-                ModelState.AddModelError(string.Empty, "Amount should be positive");
+            return null;
         }
     }
 }

@@ -127,6 +127,23 @@ namespace ZlagodaPrj.Controllers
             if (string.IsNullOrEmpty(id))
                 return NotFound("Check number not set");
 
+
+            // find all sales associated with that check
+            string selectAllSalesCmd = $"select {Sale.COL_UPC}" +
+                $" from {Sale.TABLE_NAME}" +
+                $" where {Sale.COL_CHECK_NUMBER} = '{id}'";
+
+            using var selectCmd = await ConnectionManager.CreateCommandAsync(selectAllSalesCmd);
+            using var reader = await selectCmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                string upc = (string)reader[Sale.COL_UPC];
+                IActionResult? deleteSaleErrorRes = await SalesController.DeleteSaleAsync(upc, id, this);
+                if (deleteSaleErrorRes != null)
+                    return deleteSaleErrorRes;
+            }
+
             string cmd = $"DELETE FROM {Check.TABLE_NAME}" +
                 $" WHERE {Check.COL_NUMBER} = '{id}'";
 
