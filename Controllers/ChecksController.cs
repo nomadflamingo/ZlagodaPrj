@@ -103,11 +103,18 @@ namespace ZlagodaPrj.Controllers
             ValidateCreateUpdateModel(model);
             if (!ModelState.IsValid) return View();
 
+            string? cashierId = UserManager.GetCurrentUserId(HttpContext);
+            if (string.IsNullOrEmpty(cashierId))  // should never happen
+            {
+                ModelState.AddModelError(string.Empty, "Unknown cashier id. Try signing in and out again");
+                return View();
+            }
+
             // open the connection
             string cmd = $"insert into {Check.TABLE_NAME} " +
                 $" ({Check.COL_NUMBER}, {Check.COL_CASHIER_ID}, {Check.COL_CARD_NUMBER}," +
                 $" {Check.COL_PRINT_DATE}, {Check.COL_SUM_TOTAL}, {Check.COL_VAT})" +
-                $" values ('{model.Number}', '{model.CashierId}', '{model.CardNumber}', " +
+                $" values ('{model.Number}', '{cashierId}', '{model.CardNumber}', " +
                 $" '{DateTime.UtcNow}', '0', '0')";
 
             await ConnectionManager.ExecuteNonQueryAsync(cmd);

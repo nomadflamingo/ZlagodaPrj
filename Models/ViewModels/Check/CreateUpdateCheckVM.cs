@@ -9,10 +9,6 @@ namespace ZlagodaPrj.Models.ViewModels.Check
         [MaxLength(10)]
         public string Number { get; set; }
 
-        [Required]
-        [MaxLength(10)]
-        public string CashierId { get; set; }
-
         [MaxLength(10)]
         public string? CardNumber { get; set; }
 
