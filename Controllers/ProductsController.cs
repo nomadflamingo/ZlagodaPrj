@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using ZlagodaPrj.Data;
 using ZlagodaPrj.Models;
 using ZlagodaPrj.Models.DTO;
-using ZlagodaPrj.Models.ViewModels;
 using ZlagodaPrj.Models.ViewModels.CustomerCard;
 using ZlagodaPrj.Models.ViewModels.Product;
 
@@ -232,6 +231,46 @@ namespace ZlagodaPrj.Controllers
                     ProductName = (string)reader[Product.COL_NAME],
 
                 });
+            }
+
+            return View(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ProductsSoldInEveryCity()
+        {
+            string cmdText = $"select {Product.COL_ID}, {Product.COL_NAME}" +
+                $" from {Product.TABLE_NAME} pr1" +
+                $" where not exists (" +
+                $"   select {CustomerCard.COL_CITY}" +
+                $"   from {CustomerCard.TABLE_NAME} cc1" +
+                $"   where not exists (" +
+                $"     select *" +
+                $"     from {Sale.TABLE_NAME} sa" +
+                $"     inner join {StoreProduct.TABLE_NAME} sp" +
+                $"       on sp.{StoreProduct.COL_UPC} = sa.{Sale.COL_UPC}" +
+                $"     inner join {Check.TABLE_NAME} ch" +
+                $"       on ch.{Check.COL_NUMBER} = sa.{Sale.COL_CHECK_NUMBER}" +
+                $"     inner join {CustomerCard.TABLE_NAME} cc" +
+                $"       on cc.{CustomerCard.COL_NUMBER} = ch.{Check.COL_CARD_NUMBER}" +
+                $"     where cc.{CustomerCard.COL_CITY} = cc1.{CustomerCard.COL_CITY}" +
+                $"     and pr1.{Product.COL_ID} = sp.{StoreProduct.COL_PRODUCT_ID}" +
+                $"   )" +
+                $")";
+
+            using NpgsqlCommand cmd = await ConnectionManager.CreateCommandAsync(cmdText);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            List<ProductsSoldInEveryCity> result = new List<ProductsSoldInEveryCity>();
+            while (await reader.ReadAsync())
+            {
+                ProductsSoldInEveryCity product = new()
+                {
+                    Id = (int)reader[Product.COL_ID],
+                    Name = (string)reader[Product.COL_NAME],
+                };
+
+                result.Add(product);
             }
 
             return View(result);
