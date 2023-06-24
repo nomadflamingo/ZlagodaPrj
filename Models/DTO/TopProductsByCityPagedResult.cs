@@ -1,4 +1,4 @@
-﻿namespace ZlagodaPrj.Models.ViewModels
+﻿namespace ZlagodaPrj.Models.DTO
 {
     public class TopProductsByCityPagedResult
     {
