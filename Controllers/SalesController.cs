@@ -152,7 +152,7 @@ namespace ZlagodaPrj.Controllers
             await reader1.CloseAsync();
 
             string cmdUpdateSum = $"Update {Check.TABLE_NAME}" +
-                $" set ({Check.COL_SUM_TOTAL}, {Check.COL_VAT}) = ('{totalSum}', '{vat}')";
+                $" set ({Check.COL_SUM_TOTAL}, {Check.COL_VAT}) = ('{totalSum}', '{vat}') where {Check.COL_NUMBER} = '{checkNumber}'";
             await ConnectionManager.ExecuteNonQueryAsync(cmdUpdateSum);
 
             string cmdMain = $"DELETE FROM {Sale.TABLE_NAME}" +
