@@ -195,9 +195,8 @@ namespace ZlagodaPrj.Controllers
         }
 
 
-
-
         [HttpGet]
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
         public async Task<IActionResult> TopProductsByCity(string city)
         {
             string cmdText = $"select count(*), pr.{Product.COL_NAME}" +
@@ -237,6 +236,7 @@ namespace ZlagodaPrj.Controllers
         }
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
         public async Task<IActionResult> ProductsSoldInEveryCity()
         {
             string cmdText = $"select {Product.COL_ID}, {Product.COL_NAME}" +
