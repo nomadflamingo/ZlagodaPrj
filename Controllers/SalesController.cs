@@ -160,7 +160,7 @@ namespace ZlagodaPrj.Controllers
             await ConnectionManager.ExecuteNonQueryAsync(cmdMain);
 
             // get total product amount
-            using var selectTotalAmountCmd = await ConnectionManager.CreateCommand($"select {StoreProduct.COL_AMOUNT} from {StoreProduct.TABLE_NAME} where {StoreProduct.COL_UPC} = '{upc}'");
+            using var selectTotalAmountCmd = await ConnectionManager.CreateCommandAsync($"select {StoreProduct.COL_AMOUNT} from {StoreProduct.TABLE_NAME} where {StoreProduct.COL_UPC} = '{upc}'");
             using var readerAbc = await selectTotalAmountCmd.ExecuteReaderAsync();
             await readerAbc.ReadAsync();
             int totalAmount = (int)readerAbc[StoreProduct.COL_AMOUNT];

@@ -67,7 +67,7 @@ namespace ZlagodaPrj.Data
             return res;
         }
 
-        public static async Task<NpgsqlCommand> CreateCommand(string cmdText)
+        public static async Task<NpgsqlCommand> CreateCommandAsync(string cmdText)
         {
             var con = CreateConnection();
             await con.OpenAsync();
