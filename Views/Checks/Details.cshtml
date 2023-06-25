@@ -72,16 +72,10 @@
                 @Html.DisplayFor(model => model.Sales[i].Amount)
             </dd>
         </dl>
-        <div>
-            @Html.ActionLink("Delete Sale", "Delete", "Sales", new { upc=Model.Sales[i].Upc, checkNumber=Model.Number })
-        </div>
     }
     
 </div>
 <hr />
-<div>
-    <a class="btn btn-info" asp-controller="Sales" asp-action="Create" asp-route-parentCheckId="@Model.Number">Add Sale</a>
-</div>
 <div>
     <a asp-action="Index">Back to List</a>
 </div>

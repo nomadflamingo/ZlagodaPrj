@@ -2,7 +2,7 @@
 
 namespace ZlagodaPrj.Models.ViewModels.Sale
 {
-    public class CreateUpdateSaleVM
+    public class CreateSaleVM
     {
         [Required]
         [MaxLength(12)]

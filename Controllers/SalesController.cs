@@ -32,7 +32,7 @@ namespace ZlagodaPrj.Controllers
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.ONLY_CASHIERS_POLICY)]
-        public async Task<IActionResult> Create(CreateUpdateSaleVM model, string parentCheckId)
+        public async Task<IActionResult> Create(CreateSaleVM model, string parentCheckId)
         {
             // validate model
             ValidateModel(model);
@@ -43,6 +43,7 @@ namespace ZlagodaPrj.Controllers
             }
 
             // get discount
+            int percent = await GetCustomerCardPercentAsync(parentCheckId);
 
             // get upc price
             using var con = ConnectionManager.CreateConnection();
@@ -96,6 +97,7 @@ namespace ZlagodaPrj.Controllers
             await reader2.ReadAsync();
             decimal totalSum = (decimal)reader2[Check.COL_SUM_TOTAL];
             totalSum += price * model.Amount;
+            totalSum -= totalSum * ((decimal)0.01 * percent);
             decimal vat = totalSum * (decimal)0.2;
             await reader2.CloseAsync();
 
@@ -109,6 +111,7 @@ namespace ZlagodaPrj.Controllers
 
             return RedirectToAction("Details", "Checks", new { id = parentCheckId });
         }
+
 
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.ONLY_MANAGERS_POLICY)]
         public async Task<IActionResult> Delete(string? upc, string? checkNumber)
@@ -124,7 +127,7 @@ namespace ZlagodaPrj.Controllers
         }
 
 
-        private void ValidateModel(CreateUpdateSaleVM model)
+        private void ValidateModel(CreateSaleVM model)
         {
             if (model.Amount <= 0)
                 ModelState.AddModelError(string.Empty, "Amount should be positive");
@@ -149,6 +152,8 @@ namespace ZlagodaPrj.Controllers
             await readerGetUpcAmount.CloseAsync();
             await conGetUpcAmount.CloseAsync();
 
+            int percent = await GetCustomerCardPercentAsync(checkNumber);
+
             // get check's total sum
             using var con1 = ConnectionManager.CreateConnection();
             con1.Open();
@@ -164,6 +169,7 @@ namespace ZlagodaPrj.Controllers
             decimal totalSum = (decimal)reader1[Check.COL_SUM_TOTAL];
 
             totalSum -= price * amount;
+            totalSum -= totalSum *((decimal)0.01 * percent);
             decimal vat = totalSum * (decimal)0.2;
             await reader1.CloseAsync();
 
@@ -187,6 +193,23 @@ namespace ZlagodaPrj.Controllers
             await ConnectionManager.ExecuteNonQueryAsync(cmdRestoreStock);
 
             return null;
+        }
+
+
+        private static async Task<int> GetCustomerCardPercentAsync(string checkId)
+        {
+            string cmdText = $"select {CustomerCard.COL_PERCENT}" +
+                $" from {Check.TABLE_NAME} ch" +
+                $" inner join {CustomerCard.TABLE_NAME} cc" +
+                $"   on ch.{Check.COL_CARD_NUMBER} = cc.{CustomerCard.COL_NUMBER}" +
+                $" where {Check.COL_NUMBER} = '{checkId}'";
+
+            using var cmd = await ConnectionManager.CreateCommandAsync(cmdText);
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            await reader.ReadAsync();
+
+            return (int)reader[CustomerCard.COL_PERCENT];
         }
     }
 }

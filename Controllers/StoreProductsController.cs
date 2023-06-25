@@ -90,7 +90,7 @@ namespace ZlagodaPrj.Controllers
 
             // get all store products that are associated with the same product (should be maximum one)
             selectCmd.CommandText = $"select " +
-                $"{StoreProduct.COL_UPC}, {StoreProduct.COL_IS_PROM} " +
+                $"{StoreProduct.COL_UPC}, {StoreProduct.COL_IS_PROM}, {StoreProduct.COL_PRICE} " +
                 $"from {StoreProduct.TABLE_NAME} " +
                 $"where {StoreProduct.COL_PRODUCT_ID} = '{productId}'";
             using NpgsqlDataReader reader2 = await selectCmd.ExecuteReaderAsync();
@@ -101,7 +101,13 @@ namespace ZlagodaPrj.Controllers
                 // read the fields of the productstore entry that is already in the database
                 string upc = (string)reader[StoreProduct.COL_UPC];
                 bool isProm = (bool)reader[StoreProduct.COL_IS_PROM];
+                decimal price = (decimal)reader[StoreProduct.COL_PRICE];
 
+                if (upc == model.Upc)
+                {
+                    ModelState.AddModelError(string.Empty, $"StoreProduct with Upc '{upc}' already exists");
+                    return View();
+                }
 
                 if (isProm == model.IsProm)  // if storeproduct with same type (prom, non prom) already exists 
                 {
@@ -125,7 +131,7 @@ namespace ZlagodaPrj.Controllers
                     string mainCmdAlter = $"insert into {StoreProduct.TABLE_NAME} " +
                         $"({StoreProduct.COL_UPC}, {StoreProduct.COL_PRODUCT_ID}, {StoreProduct.COL_PRICE}, " +
                         $"{StoreProduct.COL_AMOUNT}, {StoreProduct.COL_IS_PROM}) " +
-                        $"values ('{model.Upc}', '{productId}', '{model.Price}', " +
+                        $"values ('{model.Upc}', '{productId}', '{price*(decimal)0.8}', " +
                         $"'{model.Amount}', '{model.IsProm}')";
 
                     await ConnectionManager.ExecuteNonQueryAsync(mainCmdAlter);
@@ -154,6 +160,14 @@ namespace ZlagodaPrj.Controllers
                 }
 
                 return RedirectToAction("Index");  // quit early in both cases
+            }
+            else  // no storeproducts for this product yet (can't add sale product before the main one)
+            {
+                if (model.IsProm)
+                {
+                    ModelState.AddModelError(string.Empty, "Cannot add sale storeproduct because there is no non-sale storeproduct for the product. Add non-sale version first");
+                    return View();
+                }
             }
             await con.CloseAsync();
 
@@ -281,6 +295,13 @@ namespace ZlagodaPrj.Controllers
 
             if (model.Amount <= 0)
                 ModelState.AddModelError(string.Empty, "Amount should be positive");
+
+            if (model.Price != null && model.IsProm)
+                ModelState.AddModelError(string.Empty, "Price is calculated automatically for sale items. Leave the field empty");
+
+            if (model.Price == null && !model.IsProm)
+                ModelState.AddModelError(string.Empty, "Price should be indicated for non-sale items");
+
         }
     }
 }

@@ -3,7 +3,7 @@ using ZlagodaPrj.Models.ViewModels.Sale;
 
 namespace ZlagodaPrj.Models.ViewModels.Check
 {
-    public class CreateUpdateCheckVM
+    public class CreateCheckVM
     {
         [Required]
         [MaxLength(10)]
@@ -12,6 +12,6 @@ namespace ZlagodaPrj.Models.ViewModels.Check
         [MaxLength(10)]
         public string? CardNumber { get; set; }
 
-        // public List<CreateSaleVM> Sales { get; set; } = new(){ new CreateSaleVM() { Upc = "fff", Amount = 5, Price = 6 } };
+        public List<CreateSaleVM> Sales { get; set; } = new();
     }
 }

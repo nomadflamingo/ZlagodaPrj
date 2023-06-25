@@ -1,5 +1,4 @@
-﻿@using ZlagodaPrj.Models.ViewModels.Sale;
-@model ZlagodaPrj.Models.ViewModels.Check.CreateUpdateCheckVM
+﻿@model ZlagodaPrj.Models.ViewModels.Check.CreateCheckVM
 
 @{
     ViewData["Title"] = "Create";
@@ -23,8 +22,28 @@
                 <input asp-for="CardNumber" class="form-control" />
                 <span asp-validation-for="CardNumber" class="text-danger"></span>
             </div>
+            @for (int i = 0; i < @Model.Sales.Count; i++)
+            {
+                <hr />
+                <div class="form-group">
+                    <label asp-for="Sales[i].Upc" class="control-label"></label>
+                    <input asp-for="Sales[i].Upc" class="form-control" />
+                    <span asp-validation-for="Sales[i].Upc" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Sales[i].Amount" class="control-label"></label>
+                    <input asp-for="Sales[i].Amount" class="form-control" />
+                    <span asp-validation-for="Sales[i].Amount" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Remove Sale" asp-route-saleId="@i" name="submitButton" class="btn btn-info" />
+                </div>
+            }
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <input type="submit" value="Add Sale" name="submitButton" class="btn btn-info" />
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" name="submitButton" class="btn btn-primary" />
             </div>
         </form>
     </div>
