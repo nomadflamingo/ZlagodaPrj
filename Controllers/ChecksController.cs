@@ -8,23 +8,36 @@ using System.Xml.Linq;
 using ZlagodaPrj.Models.ViewModels.Sale;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using NuGet.Protocol.Plugins;
 
 namespace ZlagodaPrj.Controllers
 {
     public class ChecksController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
             using var con = ConnectionManager.CreateConnection();
             con.Open();
 
             using var cmd = new NpgsqlCommand();
             cmd.Connection = con;
-            cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME}";
+
+            string userRole = UserManager.GetCurrentUserRole(HttpContext);
+            string userId = UserManager.GetCurrentUserId(HttpContext);
+
+            if (userRole == RoleManager.CASHIER_ROLE)
+            {
+                cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME} where {Check.COL_CASHIER_ID} = '{userId}'";
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(searchString))
+                    cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME}";
+                else
+                    cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME} where {Check.COL_CASHIER_ID} = '{searchString}'";
+            }
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-            List<CheckDTO> result = new();
+            List<CheckDTO> checks = new();
             while (await reader.ReadAsync())
             {
                 CheckDTO check = new()
@@ -32,15 +45,19 @@ namespace ZlagodaPrj.Controllers
                     Number = (string)reader[Check.COL_NUMBER],
                     CashierId = (string)reader[Check.COL_CASHIER_ID],
                     CardNumber = reader[Check.COL_CARD_NUMBER] as string,
-                    PrintDate = (DateTime)reader[Check.COL_PRINT_DATE],
+                    PrintDate = ((DateTime)reader[Check.COL_PRINT_DATE]).ToLocalTime(),
                     SumTotal = (decimal)reader[Check.COL_SUM_TOTAL],
                     Vat = (decimal)reader[Check.COL_VAT],
                 };
 
-                result.Add(check);
+                checks.Add(check);
             }
 
-            return View(result);
+            return View(new ChecksIndexPagedResult()
+            {
+                Checks = checks,
+                CurrentEmployeeIdSearchString = searchString,
+            });
         }
 
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]

@@ -1,10 +1,25 @@
-﻿@model IEnumerable<ZlagodaPrj.Models.DTO.CheckDTO>
+﻿@using ZlagodaPrj.Data;
+@model ZlagodaPrj.Models.DTO.ChecksIndexPagedResult;
 
 @{
     ViewData["Title"] = "Index";
+    string userRole = UserManager.GetCurrentUserRole(Context);
 }
 
 <h1>Index</h1>
+
+@if (userRole == RoleManager.MANAGER_ROLE)
+{
+    <form class="form-inline" asp-action="Index" method="get">
+        <label for="search-string" class="mb-2 mr-sm-2">Search by cashier</label>
+        <div class="input-group mb-2 mr-2 flex-grow-1">
+            <input id="search-string" type="text" class="form-control" placeholder="Enter the cashier id..." value="@Model.CurrentEmployeeIdSearchString" name="searchString">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
+}
 
 <p>
     <a asp-action="Create">Create New</a>
@@ -13,28 +28,28 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Number)
+                Number
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CashierId)
+                Cashier Id
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.CardNumber)
+                Card Number
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.PrintDate)
+                Print Date
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.SumTotal)
+                Total Sum
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Vat)
+                VAT
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.Checks) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Number)
