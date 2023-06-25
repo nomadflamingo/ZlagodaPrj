@@ -82,31 +82,28 @@ namespace ZlagodaPrj.Controllers
 
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-            List<EmployeeDTO> result = new List<EmployeeDTO>();
-            while (await reader.ReadAsync())
+            await reader.ReadAsync();
+            
+            EmployeeDTO emp = new()
             {
-                EmployeeDTO emp = new()
-                {
-                    Id = (string)reader[Employee.COL_ID],
-                    Surname = (string)reader[Employee.COL_SURNAME],
-                    Name = (string)reader[Employee.COL_NAME],
-                    Patronymic = reader[Employee.COL_NAME] as string,
-                    Role = (string)reader[Employee.COL_ROLE],
-                    Salary = (decimal)reader[Employee.COL_SALARY],
-                    BirthDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_BIRTHDATE]),
-                    StartDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_STARTDATE]),
-                    Phone = (string)reader[Employee.COL_PHONE],
-                    City = (string)reader[Employee.COL_CITY],
-                    Street = (string)reader[Employee.COL_STREET],
-                    ZipCode = (string)reader[Employee.COL_ZIP_CODE]
-                };
+                Id = (string)reader[Employee.COL_ID],
+                Surname = (string)reader[Employee.COL_SURNAME],
+                Name = (string)reader[Employee.COL_NAME],
+                Patronymic = reader[Employee.COL_NAME] as string,
+                Role = (string)reader[Employee.COL_ROLE],
+                Salary = (decimal)reader[Employee.COL_SALARY],
+                BirthDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_BIRTHDATE]),
+                StartDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_STARTDATE]),
+                Phone = (string)reader[Employee.COL_PHONE],
+                City = (string)reader[Employee.COL_CITY],
+                Street = (string)reader[Employee.COL_STREET],
+                ZipCode = (string)reader[Employee.COL_ZIP_CODE]
+            };
 
-                result.Add(emp);
-            }
             con.Close();
 
 
-            return View(result);
+            return View(emp);
         }
 
         [HttpGet("/Employees/Update/{id?}")]
