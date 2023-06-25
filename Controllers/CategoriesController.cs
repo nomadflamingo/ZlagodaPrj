@@ -22,7 +22,7 @@ namespace ZlagodaPrj.Controllers
             using var cmd = new NpgsqlCommand();
             cmd.Connection = con;
 
-            cmd.CommandText = $"SELECT * FROM {Category.TABLE_NAME}";
+            cmd.CommandText = $"SELECT * FROM {Category.TABLE_NAME} order by {Category.COL_NAME} asc";
 
 
             NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
