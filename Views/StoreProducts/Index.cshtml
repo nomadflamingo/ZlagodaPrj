@@ -1,40 +1,52 @@
-﻿@model IEnumerable<ZlagodaPrj.Models.DTO.StoreProductDTO>
+﻿@model ZlagodaPrj.Models.DTO.StoreProductsListPagedResult
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Store Products</h1>
 
+<form class="form-inline" asp-action="Index" method="get">
+    <label for="sort-by" class="mb-2 mr-sm-2">Sort by</label>
+    <select id="sort-by" type="text" class="form-control mb-2 mr-2" name="sortBy">
+        <option selected disabled hidden>Select an Option</option>
+        <option id="amount" value="amount">Amount</option>
+        <option id="product_name" value="product_name">Product Name</option>
+    </select>
+    <div class="input-group-append">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+</form>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Upc)
+                Upc
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.UpcProm)
+                Upc (for sale items)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ProductName)
+                Product Name
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Price)
+                Price
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Amount)
+                Amount
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.IsProm)
+                Is on sale
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.StoreProducts) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Upc)

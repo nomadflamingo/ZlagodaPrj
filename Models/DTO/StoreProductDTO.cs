@@ -2,6 +2,7 @@
 {
     public class StoreProductDTO
     {
+        public string OrderBy { get; set; }
         public string Upc { get; set; }
         public string? UpcProm { get; set; }
         public string ProductName { get; set; }

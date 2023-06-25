@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Npgsql;
 using System.Reflection;
 using System.Security.Permissions;
@@ -15,8 +16,25 @@ namespace ZlagodaPrj.Controllers
     public class StoreProductsController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortBy = "amount")
         {
+            string sortColumn = "";
+            
+            switch (sortBy)
+            {
+                case "amount":
+                    sortColumn = $"{StoreProduct.COL_AMOUNT} desc";
+                    break;
+                case "product_name":
+                    sortColumn = $"{Product.TABLE_NAME}.{Product.COL_NAME} asc";
+                    break;
+                case "none":
+                    sortColumn = "amount";
+                    break;
+                default:
+                    throw new Exception();  // should never happen
+            }
+
             using var con = ConnectionManager.CreateConnection();
             con.Open();
 
@@ -28,10 +46,10 @@ namespace ZlagodaPrj.Controllers
                 $" {StoreProduct.COL_AMOUNT}, {StoreProduct.COL_IS_PROM}, {Product.TABLE_NAME}.{Product.COL_NAME}" +
                 $" FROM {StoreProduct.TABLE_NAME} left outer join {Product.TABLE_NAME}" +
                 $" on {StoreProduct.TABLE_NAME}.{StoreProduct.COL_PRODUCT_ID} = {Product.TABLE_NAME}.{Product.COL_ID}" +
-                $" order by {StoreProduct.COL_AMOUNT} asc";
+                $" order by {sortColumn}";
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
-            List<StoreProductDTO> result = new();
+            List<StoreProductDTO> storeProducts = new();
             while (await reader.ReadAsync())
             {
                 StoreProductDTO product = new()
@@ -44,8 +62,14 @@ namespace ZlagodaPrj.Controllers
                     IsProm = (bool)reader[StoreProduct.COL_IS_PROM],
                 };
 
-                result.Add(product);
+                storeProducts.Add(product);
             }
+
+            StoreProductsListPagedResult result = new()
+            {
+                SortBy = sortBy,
+                StoreProducts = storeProducts,
+            };
 
             return View(result);
         }
