@@ -4,7 +4,9 @@
     {
         public List<StoreProductDTO> StoreProducts { get; set; }
 
-        public string SortBy { get; set; }
+        public bool ShowOnlyOnSale { get; set; }
+        public bool ShowOnlyNonSale { get; set; }
+        public string UpcSearchString { get; set; }
 
     }
 }

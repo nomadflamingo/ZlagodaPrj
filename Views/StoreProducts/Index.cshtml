@@ -7,14 +7,19 @@
 <h1>Store Products</h1>
 
 <form class="form-inline" asp-action="Index" method="get">
+    <label for="upc-search-string" class="mb-2 mr-sm-2">Search by UPC</label>
+    <input id="upc-search-string" type="text" class="form-control" placeholder="Enter UPC..." value="@Model.UpcSearchString" name="upcSearchString">
+    
     <label for="sort-by" class="mb-2 mr-sm-2">Sort by</label>
     <select id="sort-by" type="text" class="form-control mb-2 mr-2" name="sortBy">
         <option selected disabled hidden>Select an Option</option>
         <option id="amount" value="amount">Amount</option>
         <option id="product_name" value="product_name">Product Name</option>
     </select>
-    <div class="input-group-append">
-        <button type="submit" class="btn btn-primary">Search</button>
+    <input class="form-check-input" asp-for="ShowOnlyOnSale" name="showOnlyOnSale" /> Show only sale items
+    <input class="form-check-input" asp-for="ShowOnlyNonSale" name="showOnlyNonSale" /> Show only non-sale items
+    <div>
+        <input type="submit" value="Search" name="submitButton" class="btn btn-primary"/>
     </div>
 </form>
 <p>
@@ -28,7 +33,7 @@
                 Upc
             </th>
             <th>
-                Upc (for sale items)
+                Upc for sale items
             </th>
             <th>
                 Product Name
@@ -40,7 +45,10 @@
                 Amount
             </th>
             <th>
-                Is on sale
+                Is on sale?
+            </th>
+            <th>
+                Characteristics
             </th>
             <th></th>
         </tr>
@@ -65,6 +73,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.IsProm)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Characteristics)
             </td>
             <td>
                 @Html.ActionLink("Update", "Update", new { id=item.Upc }) |

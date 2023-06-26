@@ -16,7 +16,7 @@ namespace ZlagodaPrj.Controllers
     public class StoreProductsController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index(string sortBy = "amount")
+        public async Task<IActionResult> Index(bool showOnlyOnSale, bool showOnlyNonSale, string upcSearchString, string sortBy = "amount")
         {
             string sortColumn = "";
             
@@ -43,10 +43,21 @@ namespace ZlagodaPrj.Controllers
             cmd.CommandText = $"" +
                 $"SELECT" +
                 $" {StoreProduct.COL_UPC}, {StoreProduct.COL_UPC_PROM}, {StoreProduct.COL_PRICE}," +
-                $" {StoreProduct.COL_AMOUNT}, {StoreProduct.COL_IS_PROM}, {Product.TABLE_NAME}.{Product.COL_NAME}" +
+                $" {StoreProduct.COL_AMOUNT}, {StoreProduct.COL_IS_PROM}, {Product.TABLE_NAME}.{Product.COL_NAME}, " +
+                $" {Product.TABLE_NAME}.{Product.COL_CHARACTERISTICS}" +
                 $" FROM {StoreProduct.TABLE_NAME} left outer join {Product.TABLE_NAME}" +
                 $" on {StoreProduct.TABLE_NAME}.{StoreProduct.COL_PRODUCT_ID} = {Product.TABLE_NAME}.{Product.COL_ID}" +
-                $" order by {sortColumn}";
+                $" where 1=1 ";
+
+            if (showOnlyOnSale)
+                cmd.CommandText += $" and {StoreProduct.COL_IS_PROM} = '{true}'";
+            if (showOnlyNonSale)
+                cmd.CommandText += $" and {StoreProduct.COL_IS_PROM} = '{false}'";
+
+            if (!string.IsNullOrEmpty(upcSearchString))
+                cmd.CommandText += $" and {StoreProduct.COL_UPC} = '{upcSearchString}'";
+
+            cmd.CommandText += $" order by {sortColumn}";
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             List<StoreProductDTO> storeProducts = new();
@@ -60,6 +71,7 @@ namespace ZlagodaPrj.Controllers
                     Price = (decimal)reader[StoreProduct.COL_PRICE],
                     Amount = (int)reader[StoreProduct.COL_AMOUNT],
                     IsProm = (bool)reader[StoreProduct.COL_IS_PROM],
+                    Characteristics = (string)reader[Product.COL_CHARACTERISTICS],
                 };
 
                 storeProducts.Add(product);
@@ -67,8 +79,10 @@ namespace ZlagodaPrj.Controllers
 
             StoreProductsListPagedResult result = new()
             {
-                SortBy = sortBy,
                 StoreProducts = storeProducts,
+                ShowOnlyOnSale = showOnlyOnSale,
+                ShowOnlyNonSale = showOnlyNonSale,
+                UpcSearchString = upcSearchString,
             };
 
             return View(result);

@@ -4,5 +4,6 @@
     {
         public IEnumerable<EmployeeDTO> Employees { get; set; }
         public string SurnameSearchString { get; set; }
+        public bool IncludeTotalSellingsSum { get; set; }
     }
 }
