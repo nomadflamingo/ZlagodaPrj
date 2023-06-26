@@ -17,8 +17,12 @@ namespace ZlagodaPrj.Controllers
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
         public async Task<IActionResult> Index(string searchString, DateTime? startTime, DateTime? endTime, string submitButton)
         {
-            if (startTime != null && endTime != null && startTime > endTime)
+            /*if (startTime != null && endTime != null && startTime > endTime)
+            {
                 ModelState.AddModelError(string.Empty, "End time cannot be earlier than start time");
+                return View();
+            }*/
+                
 
             if (submitButton == "Show for today")
             {
@@ -40,7 +44,7 @@ namespace ZlagodaPrj.Controllers
             {
                 cmd.CommandText += $" and {Check.COL_CASHIER_ID} = '{userId}'";
             }
-            else
+            else  // manager
             {
                 if (!string.IsNullOrEmpty(searchString))
                     cmd.CommandText += $" and {Check.COL_CASHIER_ID} = '{searchString}'";
