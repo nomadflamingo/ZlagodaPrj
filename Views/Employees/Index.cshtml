@@ -6,11 +6,23 @@
     <h1>Employees list</h1>
     <form class="form-inline" asp-action="Index" method="get">
         <label for="surname-search-string" class="mb-2 mr-sm-2">Search by surname</label>
-        <div class="input-group mb-2 mr-2 flex-grow-1">
-            <input id="surname-search-string" type="text" class="form-control" placeholder="Enter the surname..." value="@Model.SurnameSearchString" name="surnameSearchString">
-            <div class="input-group-append">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
+        <input id="surname-search-string" type="text" class="form-control" placeholder="Enter the surname..." value="@Model.SurnameSearchString" name="surnameSearchString">
+
+        <label for="id-search-string" class="mb-2 mr-sm-2">Search by id</label>
+        <input id="id-search-string" type="text" class="form-control" placeholder="Enter the id..." value="@Model.IdSearchString" name="idSearchString">
+            
+        
+        <input class="form-check-input" asp-for="IncludeTotalSold" name="includeTotalSold" /> Include total sold product amount
+        <label for="start-time" class="mb-2 mr-sm-2">Start Time</label>
+        <input id="start-time" asp-for="StartTime" name="startTime">
+        <label for="end-time" class="mb-2 mr-sm-2">End Time</label>
+        <input id="end-time" asp-for="EndTime" name="endTime">
+        @if (Model.IncludeTotalSold)
+        {
+            <b>Total sold by all employees in the list: @Model.TotalSold</b>
+        }
+        <div>
+            <button type="submit" class="btn btn-primary">Search</button>
         </div>
     </form>
     <div>
@@ -32,6 +44,10 @@
                 <th>City</th>
                 <th>Street</th>
                 <th>Zip Code</th>
+            @if (Model.IncludeTotalSold)
+            {
+                <th>Total sold</th>
+            }
             </tr>
         </thead>
         <tbody>
@@ -49,6 +65,10 @@
                     <td>@emp.City</td>
                     <td>@emp.Street</td>
                     <td>@emp.ZipCode</td>
+                @if (Model.IncludeTotalSold)
+                {
+                    <td>@emp.TotalSold</td>
+                }
                     <td>
                         <a class="btn btn-primary" asp-action="Update" asp-route-id="@emp.Id">Update</a>
                         <a class="btn btn-danger" asp-action="Delete" asp-route-id="@emp.Id">Delete</a>

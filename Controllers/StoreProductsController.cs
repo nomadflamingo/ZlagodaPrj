@@ -16,7 +16,7 @@ namespace ZlagodaPrj.Controllers
     public class StoreProductsController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index(bool showOnlyOnSale, bool showOnlyNonSale, string upcSearchString, string sortBy = "amount")
+        public async Task<IActionResult> Index(bool showOnlyOnSale, bool showOnlyNonSale, string upcSearchString, DateTime? startTime, DateTime? endTime, bool includeTotalSold = false, string sortBy = "amount")
         {
             string sortColumn = "";
             
@@ -40,7 +40,10 @@ namespace ZlagodaPrj.Controllers
 
             using var cmd = new NpgsqlCommand();
             cmd.Connection = con;
-            cmd.CommandText = $"" +
+
+            if (!includeTotalSold)
+            {
+                cmd.CommandText = $"" +
                 $"SELECT" +
                 $" {StoreProduct.COL_UPC}, {StoreProduct.COL_UPC_PROM}, {StoreProduct.COL_PRICE}," +
                 $" {StoreProduct.COL_AMOUNT}, {StoreProduct.COL_IS_PROM}, {Product.TABLE_NAME}.{Product.COL_NAME}, " +
@@ -49,31 +52,75 @@ namespace ZlagodaPrj.Controllers
                 $" on {StoreProduct.TABLE_NAME}.{StoreProduct.COL_PRODUCT_ID} = {Product.TABLE_NAME}.{Product.COL_ID}" +
                 $" where 1=1 ";
 
-            if (showOnlyOnSale)
-                cmd.CommandText += $" and {StoreProduct.COL_IS_PROM} = '{true}'";
-            if (showOnlyNonSale)
-                cmd.CommandText += $" and {StoreProduct.COL_IS_PROM} = '{false}'";
+                if (showOnlyOnSale)
+                    cmd.CommandText += $" and {StoreProduct.COL_IS_PROM} = '{true}'";
+                if (showOnlyNonSale)
+                    cmd.CommandText += $" and {StoreProduct.COL_IS_PROM} = '{false}'";
 
-            if (!string.IsNullOrEmpty(upcSearchString))
-                cmd.CommandText += $" and {StoreProduct.COL_UPC} = '{upcSearchString}'";
+                if (!string.IsNullOrEmpty(upcSearchString))
+                    cmd.CommandText += $" and {StoreProduct.COL_UPC} = '{upcSearchString}'";
 
-            cmd.CommandText += $" order by {sortColumn}";
+                cmd.CommandText += $" order by {sortColumn}";
+            } 
+            else
+            {
+                cmd.CommandText = $"select sum(sa.{Sale.COL_AMOUNT}), sp.* " +
+                    $" from {StoreProduct.TABLE_NAME} sp" +
+                    $" inner join {Sale.TABLE_NAME} sa " +
+                    $"   on sa.{Sale.COL_UPC} = sp.{StoreProduct.COL_UPC}" +
+                    $" inner join {Check.TABLE_NAME} ch" +
+                    $"   on ch.{Check.COL_NUMBER} = sa.{Sale.COL_CHECK_NUMBER} " +
+                    $" where 1=1 ";
+
+                if (showOnlyOnSale)
+                    cmd.CommandText += $" and sp.{StoreProduct.COL_IS_PROM} = '{true}'";
+                if (showOnlyNonSale)
+                    cmd.CommandText += $" and sp.{StoreProduct.COL_IS_PROM} = '{false}'";
+
+                if (startTime != null)
+                    cmd.CommandText += $" and ch.{Check.COL_PRINT_DATE} >= '{((DateTime)startTime).ToUniversalTime()}' ";
+                if (endTime != null)
+                    cmd.CommandText += $" and ch.{Check.COL_PRINT_DATE} <= '{((DateTime)endTime).ToUniversalTime()}' ";
+
+                if (!string.IsNullOrEmpty(upcSearchString))
+                    cmd.CommandText += $" and sp.{StoreProduct.COL_UPC} = '{upcSearchString}'";
+
+                cmd.CommandText += $" group by sp.{StoreProduct.COL_UPC}";
+                cmd.CommandText += $" order by sum desc";
+            }
+            
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             List<StoreProductDTO> storeProducts = new();
             while (await reader.ReadAsync())
             {
-                StoreProductDTO product = new()
-                {
-                    Upc = (string)reader[StoreProduct.COL_UPC],
-                    UpcProm = reader[StoreProduct.COL_UPC_PROM] as string,
-                    ProductName = (string)reader[Product.COL_NAME],
-                    Price = (decimal)reader[StoreProduct.COL_PRICE],
-                    Amount = (int)reader[StoreProduct.COL_AMOUNT],
-                    IsProm = (bool)reader[StoreProduct.COL_IS_PROM],
-                    Characteristics = (string)reader[Product.COL_CHARACTERISTICS],
-                };
+                StoreProductDTO product;
 
+                if (!includeTotalSold)
+                {
+                    product = new()
+                    {
+                        Upc = (string)reader[StoreProduct.COL_UPC],
+                        UpcProm = reader[StoreProduct.COL_UPC_PROM] as string,
+                        ProductName = (string)reader[Product.COL_NAME],
+                        Price = (decimal)reader[StoreProduct.COL_PRICE],
+                        Amount = (int)reader[StoreProduct.COL_AMOUNT],
+                        IsProm = (bool)reader[StoreProduct.COL_IS_PROM],
+                        Characteristics = (string)reader[Product.COL_CHARACTERISTICS],
+                    };
+                }
+                else
+                {
+                    product = new()
+                    {
+                        Upc = (string)reader[StoreProduct.COL_UPC],
+                        UpcProm = reader[StoreProduct.COL_UPC_PROM] as string,
+                        Price = (decimal)reader[StoreProduct.COL_PRICE],
+                        Amount = (int)reader[StoreProduct.COL_AMOUNT],
+                        IsProm = (bool)reader[StoreProduct.COL_IS_PROM],
+                        TotalSold = (long)reader["sum"],
+                    };
+                }
                 storeProducts.Add(product);
             }
 
@@ -83,6 +130,9 @@ namespace ZlagodaPrj.Controllers
                 ShowOnlyOnSale = showOnlyOnSale,
                 ShowOnlyNonSale = showOnlyNonSale,
                 UpcSearchString = upcSearchString,
+                StartTime = startTime ?? DateTime.MinValue,
+                EndTime = endTime ?? DateTime.MaxValue.AddTicks(-(DateTime.MaxValue.Ticks % TimeSpan.TicksPerSecond)).AddSeconds(-DateTime.MaxValue.Second),
+                IncludeTotalSold = includeTotalSold,
             };
 
             return View(result);

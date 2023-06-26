@@ -9,5 +9,6 @@
         public int Amount { get; set; }
         public bool IsProm { get; set; }
         public string Characteristics { get; set; }
+        public long? TotalSold { get; set; }
     }
 }

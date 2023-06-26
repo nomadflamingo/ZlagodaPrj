@@ -10,14 +10,27 @@
     <label for="upc-search-string" class="mb-2 mr-sm-2">Search by UPC</label>
     <input id="upc-search-string" type="text" class="form-control" placeholder="Enter UPC..." value="@Model.UpcSearchString" name="upcSearchString">
     
-    <label for="sort-by" class="mb-2 mr-sm-2">Sort by</label>
-    <select id="sort-by" type="text" class="form-control mb-2 mr-2" name="sortBy">
-        <option selected disabled hidden>Select an Option</option>
-        <option id="amount" value="amount">Amount</option>
-        <option id="product_name" value="product_name">Product Name</option>
-    </select>
+    @if (!Model.IncludeTotalSold)
+    {
+        <label for="sort-by" class="mb-2 mr-sm-2">Sort by</label>
+        <select id="sort-by" type="text" class="form-control mb-2 mr-2" name="sortBy">
+            <option selected disabled hidden>Select an Option</option>
+            <option id="amount" value="amount">Amount</option>
+            <option id="product_name" value="product_name">Product Name</option>
+        </select>
+    }
+    
+
     <input class="form-check-input" asp-for="ShowOnlyOnSale" name="showOnlyOnSale" /> Show only sale items
     <input class="form-check-input" asp-for="ShowOnlyNonSale" name="showOnlyNonSale" /> Show only non-sale items
+    
+    <div>
+        <input class="form-check-input" asp-for="IncludeTotalSold" name="includeTotalSold" /> Include total sold product amount
+        <label for="start-time" class="mb-2 mr-sm-2">Start Time</label>
+        <input id="start-time" asp-for="StartTime" name="startTime">
+        <label for="end-time" class="mb-2 mr-sm-2">End Time</label>
+        <input id="end-time" asp-for="EndTime" name="endTime">
+    </div>
     <div>
         <input type="submit" value="Search" name="submitButton" class="btn btn-primary"/>
     </div>
@@ -35,9 +48,12 @@
             <th>
                 Upc for sale items
             </th>
+        @if (!Model.IncludeTotalSold)
+        {
             <th>
                 Product Name
             </th>
+        }
             <th>
                 Price
             </th>
@@ -47,9 +63,18 @@
             <th>
                 Is on sale?
             </th>
+        @if (Model.IncludeTotalSold)
+        {
+            <th>
+                Total Sold
+            </th>
+        }
+        else
+        {
             <th>
                 Characteristics
             </th>
+        }
             <th></th>
         </tr>
     </thead>
@@ -62,9 +87,12 @@
             <td>
                 @Html.DisplayFor(modelItem => item.UpcProm)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ProductName)
-            </td>
+            @if (!Model.IncludeTotalSold)
+            {
+                <td>
+                    @Html.DisplayFor(modelItem => item.ProductName)
+                </td>
+            }
             <td>
                 @Html.DisplayFor(modelItem => item.Price)
             </td>
@@ -74,9 +102,19 @@
             <td>
                 @Html.DisplayFor(modelItem => item.IsProm)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Characteristics)
-            </td>
+            @if (Model.IncludeTotalSold)
+            {
+                <td>
+                    @Html.DisplayFor(modelItem => item.TotalSold)
+                </td>
+            }
+            else
+            {
+                <td>
+                    @Html.DisplayFor(modelItem => item.Characteristics)
+                </td>
+            }
+            
             <td>
                 @Html.ActionLink("Update", "Update", new { id=item.Upc }) |
                 @Html.ActionLink("Delete", "Delete", new { id=item.Upc} )

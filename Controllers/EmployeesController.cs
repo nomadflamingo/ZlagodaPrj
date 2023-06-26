@@ -16,7 +16,7 @@ namespace ZlagodaPrj.Controllers
     public class EmployeesController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.ONLY_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index(string surnameSearchString, bool showOnlyCashiers = false)
+        public async Task<IActionResult> Index(string surnameSearchString, string idSearchString, DateTime? startTime, DateTime? endTime, bool includeTotalSold = false, bool showOnlyCashiers = false)
 		{
             // open connection
 			using var con = ConnectionManager.CreateConnection();
@@ -25,36 +25,93 @@ namespace ZlagodaPrj.Controllers
 			using var cmd = new NpgsqlCommand();
 			cmd.Connection = con;
 
-            cmd.CommandText = $"SELECT * FROM {Employee.TABLE_NAME} where 1=1 ";
 
-            if (showOnlyCashiers)
-                cmd.CommandText += $" and {Employee.COL_ROLE} = '{RoleManager.CASHIER_ROLE}' ";
+            if (!includeTotalSold)
+            {
+                cmd.CommandText = $"SELECT * FROM {Employee.TABLE_NAME} where 1=1 ";
 
-            if (!string.IsNullOrEmpty(surnameSearchString))
-                cmd.CommandText += $" and {Employee.COL_SURNAME} = '{surnameSearchString}'";
+                if (showOnlyCashiers)
+                    cmd.CommandText += $" and {Employee.COL_ROLE} = '{RoleManager.CASHIER_ROLE}' ";
 
-            cmd.CommandText += $" order by {Employee.COL_SURNAME} asc";
+                if (!string.IsNullOrEmpty(surnameSearchString))
+                    cmd.CommandText += $" and {Employee.COL_SURNAME} = '{surnameSearchString}'";
 
+                if (!string.IsNullOrEmpty(idSearchString))
+                    cmd.CommandText += $" and {Employee.COL_ID} = '{idSearchString}' ";
+
+                cmd.CommandText += $" order by {Employee.COL_SURNAME} asc";
+            }
+            else
+            {
+                cmd.CommandText = $"select " +
+                    $" sum({Sale.COL_AMOUNT}), emp.* " +
+                    $" from {Sale.TABLE_NAME} sa " +
+                    $" inner join {Check.TABLE_NAME} ch " +
+                    $"   on ch.{Check.COL_NUMBER} = sa.{Sale.COL_CHECK_NUMBER} " +
+                    $" inner join {Employee.TABLE_NAME} emp " +
+                    $"   on emp.{Employee.COL_ID} = ch.{Check.COL_CASHIER_ID} " +
+                    $" where 1=1 ";
+
+                if (!string.IsNullOrEmpty(surnameSearchString))
+                    cmd.CommandText += $" and emp.{Employee.COL_SURNAME} = '{surnameSearchString}'";
+
+                if (!string.IsNullOrEmpty(idSearchString))
+                    cmd.CommandText += $" and emp.{Employee.COL_ID} = '{idSearchString}' ";
+
+                if (startTime != null)
+                    cmd.CommandText += $" and ch.{Check.COL_PRINT_DATE} >= '{((DateTime)startTime).ToUniversalTime()}' ";
+
+                if (endTime != null)
+                    cmd.CommandText += $" and ch.{Check.COL_PRINT_DATE} <= '{((DateTime)endTime).ToUniversalTime()}' ";
+
+                cmd.CommandText += $" group by emp.{Employee.COL_ID}";
+                cmd.CommandText += $" order by sum desc";
+            }
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
 			List<EmployeeDTO> result = new List<EmployeeDTO>();
+            long totalSold = 0;
 			while (await reader.ReadAsync())
 			{
-                EmployeeDTO emp = new()
+                EmployeeDTO emp;
+                if (!includeTotalSold)
                 {
-                    Id = (string)reader[Employee.COL_ID],
-                    Surname = (string)reader[Employee.COL_SURNAME],
-					Name = (string)reader[Employee.COL_NAME],
-					Patronymic = reader[Employee.COL_NAME] as string,
-                    Role = (string)reader[Employee.COL_ROLE],
-					Salary = (decimal)reader[Employee.COL_SALARY],
-                    BirthDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_BIRTHDATE]),
-					StartDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_STARTDATE]),
-                    Phone = (string)reader[Employee.COL_PHONE],
-                    City = (string)reader[Employee.COL_CITY],
-                    Street = (string)reader[Employee.COL_STREET],
-                    ZipCode = (string)reader[Employee.COL_ZIP_CODE]
-				};
+                    emp = new()
+                    {
+                        Id = (string)reader[Employee.COL_ID],
+                        Surname = (string)reader[Employee.COL_SURNAME],
+                        Name = (string)reader[Employee.COL_NAME],
+                        Patronymic = reader[Employee.COL_NAME] as string,
+                        Role = (string)reader[Employee.COL_ROLE],
+                        Salary = (decimal)reader[Employee.COL_SALARY],
+                        BirthDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_BIRTHDATE]),
+                        StartDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_STARTDATE]),
+                        Phone = (string)reader[Employee.COL_PHONE],
+                        City = (string)reader[Employee.COL_CITY],
+                        Street = (string)reader[Employee.COL_STREET],
+                        ZipCode = (string)reader[Employee.COL_ZIP_CODE],
+                    };
+                }
+                else
+                {
+                    totalSold += (long)reader["sum"];
+                    emp = new()
+                    {
+                        Id = (string)reader[Employee.COL_ID],
+                        Surname = (string)reader[Employee.COL_SURNAME],
+                        Name = (string)reader[Employee.COL_NAME],
+                        Patronymic = reader[Employee.COL_NAME] as string,
+                        Role = (string)reader[Employee.COL_ROLE],
+                        Salary = (decimal)reader[Employee.COL_SALARY],
+                        BirthDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_BIRTHDATE]),
+                        StartDate = DateOnly.FromDateTime((DateTime)reader[Employee.COL_STARTDATE]),
+                        Phone = (string)reader[Employee.COL_PHONE],
+                        City = (string)reader[Employee.COL_CITY],
+                        Street = (string)reader[Employee.COL_STREET],
+                        ZipCode = (string)reader[Employee.COL_ZIP_CODE],
+                        TotalSold = (long)reader["sum"],
+                    };
+                }
 
 				result.Add(emp);
 			}
@@ -64,6 +121,11 @@ namespace ZlagodaPrj.Controllers
             {
                 Employees = result,
                 SurnameSearchString = surnameSearchString,
+                IncludeTotalSold = includeTotalSold,
+                IdSearchString = idSearchString,
+                StartTime = startTime ?? DateTime.MinValue,
+                EndTime = endTime ?? DateTime.MaxValue.AddTicks(-(DateTime.MaxValue.Ticks % TimeSpan.TicksPerSecond)).AddSeconds(-DateTime.MaxValue.Second),
+                TotalSold = totalSold,
             });
 		}
 
