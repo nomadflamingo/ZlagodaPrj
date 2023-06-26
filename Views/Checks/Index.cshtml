@@ -2,24 +2,32 @@
 @model ZlagodaPrj.Models.DTO.ChecksIndexPagedResult;
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Checks";
     string userRole = UserManager.GetCurrentUserRole(Context);
 }
 
-<h1>Index</h1>
+<h1>Checks</h1>
 
+<form class="form-inline" asp-action="Index" method="get">
 @if (userRole == RoleManager.MANAGER_ROLE)
 {
-    <form class="form-inline" asp-action="Index" method="get">
-        <label for="search-string" class="mb-2 mr-sm-2">Search by cashier</label>
-        <div class="input-group mb-2 mr-2 flex-grow-1">
-            <input id="search-string" type="text" class="form-control" placeholder="Enter the cashier id..." value="@Model.CurrentEmployeeIdSearchString" name="searchString">
-            <div class="input-group-append">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
-        </div>
-    </form>
-}
+    <label for="search-string" class="mb-2 mr-sm-2">Search by cashier</label>
+    <div class="input-group mb-2 mr-2 flex-grow-1">
+        <input id="search-string" type="text" class="form-control" placeholder="Enter the cashier id..." value="@Model.CurrentEmployeeIdSearchString" name="searchString">
+    </div>
+}    
+    <label for="start-time" class="mb-2 mr-sm-2">Start Time</label>
+    <input id="start-time" asp-for="StartTime" name="startTime">
+    <label for="end-time" class="mb-2 mr-sm-2">End Time</label>
+    <input id="end-time" asp-for="EndTime" name="endTime">
+    <div class="mb-2">
+        <input type="submit" value="Search" name="submitButton" class="btn btn-primary" />
+    </div>
+    <div>
+        <input type="submit" value="Show for today" name="submitButton" class="btn btn-primary" />
+    </div>
+</form>
+
 
 <p>
     <a asp-action="Create">Create New</a>

@@ -8,14 +8,24 @@ using System.Xml.Linq;
 using ZlagodaPrj.Models.ViewModels.Sale;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace ZlagodaPrj.Controllers
 {
     public class ChecksController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, DateTime? startTime, DateTime? endTime, string submitButton)
         {
+            if (startTime != null && endTime != null && startTime > endTime)
+                ModelState.AddModelError(string.Empty, "End time cannot be earlier than start time");
+
+            if (submitButton == "Show for today")
+            {
+                startTime = DateTime.Today;
+                endTime = DateTime.Today.AddDays(1);
+            }
+
             using var con = ConnectionManager.CreateConnection();
             con.Open();
 
@@ -25,17 +35,23 @@ namespace ZlagodaPrj.Controllers
             string userRole = UserManager.GetCurrentUserRole(HttpContext);
             string userId = UserManager.GetCurrentUserId(HttpContext);
 
+            cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME} where 1=1";
             if (userRole == RoleManager.CASHIER_ROLE)
             {
-                cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME} where {Check.COL_CASHIER_ID} = '{userId}'";
+                cmd.CommandText += $" and {Check.COL_CASHIER_ID} = '{userId}'";
             }
             else
             {
-                if (string.IsNullOrEmpty(searchString))
-                    cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME}";
-                else
-                    cmd.CommandText = $"SELECT * FROM {Check.TABLE_NAME} where {Check.COL_CASHIER_ID} = '{searchString}'";
+                if (!string.IsNullOrEmpty(searchString))
+                    cmd.CommandText += $" and {Check.COL_CASHIER_ID} = '{searchString}'";
             }
+
+            if (startTime != null)
+                cmd.CommandText += $" and {Check.COL_PRINT_DATE} >= '{((DateTime)startTime).ToUniversalTime()}'";
+
+            if (endTime != null)
+                cmd.CommandText += $" and {Check.COL_PRINT_DATE} <= '{((DateTime)endTime).ToUniversalTime()}'";
+
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             List<CheckDTO> checks = new();
             while (await reader.ReadAsync())
@@ -57,6 +73,8 @@ namespace ZlagodaPrj.Controllers
             {
                 Checks = checks,
                 CurrentEmployeeIdSearchString = searchString,
+                StartTime = startTime ?? DateTime.MinValue,
+                EndTime = endTime ?? DateTime.MaxValue.AddTicks(-(DateTime.MaxValue.Ticks % TimeSpan.TicksPerSecond)).AddSeconds(-DateTime.MaxValue.Second),
             });
         }
 
