@@ -1,11 +1,30 @@
-﻿@model IEnumerable<ZlagodaPrj.Models.CustomerCard>
+﻿@using ZlagodaPrj.Data;
+@model ZlagodaPrj.Models.DTO.CustomerCardIndexPagedResult
 
 @{
     ViewData["Title"] = "Index";
+    string userRole = UserManager.GetCurrentUserRole(Context);
 }
 
-<h1>Index</h1>
+<h1>Customers</h1>
 
+<form class="form-inline" asp-action="Index" method="get">
+    <label for="surname-search-string" class="mb-2 mr-sm-2">Search by customer surname</label>
+    <div class="input-group mb-2 mr-2 flex-grow-1">
+        <input id="surname-search-string" type="text" class="form-control" placeholder="Enter the surname..." value="@Model.SurnameSearchString" name="surnameSearchString">
+    </div>
+@if (userRole == RoleManager.MANAGER_ROLE)
+{
+    <label for="start-time" class="mb-2 mr-sm-2">Min Percent</label>
+    <input id="start-time" asp-for="MinPercent" name="minPercent">
+
+    <label for="end-time" class="mb-2 mr-sm-2">Max Percent</label>
+    <input id="end-time" asp-for="MaxPercent" name="maxPercent">
+}
+    <div class="mb-2">
+        <input type="submit" value="Search" name="submitButton" class="btn btn-primary" />
+    </div>
+</form>
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -13,37 +32,37 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Number)
+                Number
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Surname)
+                Surname
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                Name
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Patronymic)
+                Patronymic
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Phone)
+                Phone
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.City)
+                City
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Street)
+                Street
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ZipCode)
+                Zip Code
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Percent)
+                Discount Percent
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+@foreach (var item in Model.CustomerCards) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Number)

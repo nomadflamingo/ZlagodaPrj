@@ -1,9 +1,18 @@
-﻿@model IEnumerable<ZlagodaPrj.Models.DTO.EmployeeDTO>
+﻿@model ZlagodaPrj.Models.DTO.EmployeeIndexPagedResult
+
 
 
 <div class="container p-3">
     <h1>Employees list</h1>
-
+    <form class="form-inline" asp-action="Index" method="get">
+        <label for="surname-search-string" class="mb-2 mr-sm-2">Search by surname</label>
+        <div class="input-group mb-2 mr-2 flex-grow-1">
+            <input id="surname-search-string" type="text" class="form-control" placeholder="Enter the surname..." value="@Model.SurnameSearchString" name="surnameSearchString">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </form>
     <div>
         <a asp-controller="Employees" asp-action="Index" asp-route-showOnlyCashiers="@false" class="btn btn-primary">Show all employees</a>
         <a asp-controller="Employees" asp-action="Index" asp-route-showOnlyCashiers="@true" class="btn btn-primary">Show only cashiers</a>
@@ -26,7 +35,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var emp in Model)
+            @foreach (var emp in Model.Employees)
             {
                 <tr>
                     <td>@emp.Id</td>

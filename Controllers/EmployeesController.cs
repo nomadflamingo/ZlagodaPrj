@@ -16,7 +16,7 @@ namespace ZlagodaPrj.Controllers
     public class EmployeesController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.ONLY_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index(bool showOnlyCashiers = false)
+        public async Task<IActionResult> Index(string surnameSearchString, bool showOnlyCashiers = false)
 		{
             // open connection
 			using var con = ConnectionManager.CreateConnection();
@@ -25,19 +25,18 @@ namespace ZlagodaPrj.Controllers
 			using var cmd = new NpgsqlCommand();
 			cmd.Connection = con;
 
+            cmd.CommandText = $"SELECT * FROM {Employee.TABLE_NAME} where 1=1 ";
+
             if (showOnlyCashiers)
-            {
-                cmd.CommandText = $"SELECT * FROM {Employee.TABLE_NAME} " +
-                    $"where {Employee.COL_ROLE} = '{RoleManager.CASHIER_ROLE}' " +
-                    $"order by {Employee.COL_SURNAME} asc";
-            }
-            else
-            {
-                cmd.CommandText = $"SELECT * FROM {Employee.TABLE_NAME} order by {Employee.COL_SURNAME} asc";
-            }
+                cmd.CommandText += $" and {Employee.COL_ROLE} = '{RoleManager.CASHIER_ROLE}' ";
+
+            if (!string.IsNullOrEmpty(surnameSearchString))
+                cmd.CommandText += $" and {Employee.COL_SURNAME} = '{surnameSearchString}'";
+
+            cmd.CommandText += $" order by {Employee.COL_SURNAME} asc";
 
 
-			using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
+            using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
 			List<EmployeeDTO> result = new List<EmployeeDTO>();
 			while (await reader.ReadAsync())
 			{
@@ -61,7 +60,11 @@ namespace ZlagodaPrj.Controllers
 			}
 			await con.CloseAsync();
 
-			return View(result);
+			return View(new EmployeeIndexPagedResult
+            {
+                Employees = result,
+                SurnameSearchString = surnameSearchString,
+            });
 		}
 
         [HttpGet("/Employees/Cashiers/MyInfo")]

@@ -14,15 +14,38 @@ namespace ZlagodaPrj.Controllers
     [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
     public class CustomersController : Controller
     {
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string surnameSearchString, int? minPercent, int? maxPercent)
         {
+            /*if (minPercent != null && maxPercent != null && minPercent < maxPercent)
+            {
+                ModelState.AddModelError(string.Empty, "Max percent cannot be less than min percent");
+                return View();
+            }*/
+
+            string userRole = UserManager.GetCurrentUserRole(HttpContext);
+
             // open connection
             using var con = ConnectionManager.CreateConnection();
             con.Open();
 
             using var cmd = new NpgsqlCommand();
             cmd.Connection = con;
-            cmd.CommandText = $"SELECT * FROM {CustomerCard.TABLE_NAME} order by {CustomerCard.COL_SURNAME} asc";
+            cmd.CommandText = $"SELECT * FROM {CustomerCard.TABLE_NAME} where 1=1";
+
+            if (!string.IsNullOrEmpty(surnameSearchString))
+                cmd.CommandText += $" and {CustomerCard.COL_SURNAME} = '{surnameSearchString}'";
+
+            if (userRole == RoleManager.MANAGER_ROLE)
+            {
+                if (minPercent != null)
+                    cmd.CommandText += $" and {CustomerCard.COL_PERCENT} >= '{minPercent}'";
+
+                if (maxPercent != null)
+                    cmd.CommandText += $" and {CustomerCard.COL_PERCENT} <= '{maxPercent}'";
+            }
+            
+
+            cmd.CommandText += $" order by {CustomerCard.COL_SURNAME} asc";
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             List<CustomerCard> result = new List<CustomerCard>();
@@ -45,7 +68,13 @@ namespace ZlagodaPrj.Controllers
             }
             await con.CloseAsync();
 
-            return View(result);
+            return View(new CustomerCardIndexPagedResult
+            {
+                CustomerCards = result,
+                SurnameSearchString = surnameSearchString,
+                MaxPercent = maxPercent ?? 100,
+                MinPercent = minPercent ?? 0,
+            });
         }
 
         [HttpGet]

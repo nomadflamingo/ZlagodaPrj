@@ -14,7 +14,7 @@ namespace ZlagodaPrj.Controllers
     public class ProductsController : Controller
     {
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme, Policy = RoleManager.CASHIERS_OR_MANAGERS_POLICY)]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string productNameSearchString, string categoryName)
         {
             // open connection
             using var con = ConnectionManager.CreateConnection();
@@ -30,7 +30,15 @@ namespace ZlagodaPrj.Controllers
                 $" {Category.TABLE_NAME}.{Category.COL_NAME}" +
                 $" FROM {Product.TABLE_NAME} left outer join {Category.TABLE_NAME}" +
                 $" on {Product.TABLE_NAME}.{Category.COL_NUMBER} = {Category.TABLE_NAME}.{Product.COL_CATEGORY_NUMBER}" +
-                $" order by {Product.COL_NAME} asc";
+                $" where 1=1";
+
+            if (!string.IsNullOrEmpty(productNameSearchString))
+                cmd.CommandText += $" and {Product.TABLE_NAME}.{Product.COL_NAME} = '{productNameSearchString}'";
+
+            if (!string.IsNullOrEmpty(categoryName))
+                cmd.CommandText += $" and {Category.TABLE_NAME}.{Category.COL_NAME} = '{categoryName}'";
+
+            cmd.CommandText += $" order by {Product.COL_NAME} asc";
 
             using NpgsqlDataReader reader = await cmd.ExecuteReaderAsync();
             List<ProductDTO> result = new List<ProductDTO>();
@@ -46,10 +54,31 @@ namespace ZlagodaPrj.Controllers
 
                 result.Add(product);
             }
-
             await con.CloseAsync();
 
-            return View(result);
+
+            // get all the categories
+            string getCategoriesCmdString = $"select * from {Category.TABLE_NAME} order by {Category.COL_NAME} asc";
+            using var getCategoriesCmd = await ConnectionManager.CreateCommandAsync(getCategoriesCmdString);
+            using var getCategoriesReader = await getCategoriesCmd.ExecuteReaderAsync();
+            List<Category> categories = new();
+            while (await getCategoriesReader.ReadAsync())
+            {
+                categories.Add(new()
+                {
+                    Number = (int)getCategoriesReader[Category.COL_NUMBER],
+                    Name = getCategoriesReader[Category.COL_NAME] as string
+                });
+            }
+
+
+            return View(new ProductsListPagedResult
+            {
+                Products = result,
+                ProductNameSearchString = productNameSearchString,
+                CategoryName = categoryName,
+                Categories = categories,
+            });
         }
 
         [HttpGet]
