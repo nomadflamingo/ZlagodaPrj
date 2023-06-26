@@ -5,10 +5,7 @@ namespace ZlagodaPrj.Data
     public static class ConnectionManager
     {
         public static string? connectionString;
-        /*public static async Task<int> ExecuteNonQueryTextCommand(string cmd)
-        {
-
-        }*/
+        
 
         public static NpgsqlConnection CreateConnection()
         {
@@ -16,6 +13,11 @@ namespace ZlagodaPrj.Data
                 connectionString: connectionString);
             return con;
         }
+
+        /*public static async Task<int> ExecuteNonQueryTextCommand(string cmd)
+        {
+
+        }*/
 
         /*public static async Task<NpgsqlDataReader> ExecuteReaderAsync(string cmdText)
         {

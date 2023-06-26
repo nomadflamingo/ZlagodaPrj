@@ -142,8 +142,12 @@ namespace ZlagodaPrj.Controllers
         {
             if (submitButton == "Remove Sale")
             {
-                model.Sales.RemoveAt((int)saleId);
-                return View(model);
+                if (saleId != null)
+                {
+                    model.Sales.RemoveAt((int)saleId);
+                    return View(model);
+                }
+                
             }
             else if (submitButton == "Add Sale")
             {
