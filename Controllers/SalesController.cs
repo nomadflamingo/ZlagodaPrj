@@ -43,7 +43,12 @@ namespace ZlagodaPrj.Controllers
             }
 
             // get discount
-            int percent = await GetCustomerCardPercentAsync(parentCheckId);
+            int? getCardRes = await GetCustomerCardPercentAsync(parentCheckId);
+            int percent = 0;
+            if (getCardRes != null)
+            {
+                percent = (int)getCardRes;
+            }
 
             // get upc price
             using var con = ConnectionManager.CreateConnection();
@@ -152,7 +157,12 @@ namespace ZlagodaPrj.Controllers
             await readerGetUpcAmount.CloseAsync();
             await conGetUpcAmount.CloseAsync();
 
-            int percent = await GetCustomerCardPercentAsync(checkNumber);
+            int? getCardRes = await GetCustomerCardPercentAsync(checkNumber);
+            int percent = 0;
+            if (getCardRes != null)
+            {
+                percent = (int)getCardRes;
+            }
 
             // get check's total sum
             using var con1 = ConnectionManager.CreateConnection();
@@ -196,7 +206,7 @@ namespace ZlagodaPrj.Controllers
         }
 
 
-        private static async Task<int> GetCustomerCardPercentAsync(string checkId)
+        private static async Task<int?> GetCustomerCardPercentAsync(string checkId)
         {
             string cmdText = $"select {CustomerCard.COL_PERCENT}" +
                 $" from {Check.TABLE_NAME} ch" +
@@ -207,9 +217,17 @@ namespace ZlagodaPrj.Controllers
             using var cmd = await ConnectionManager.CreateCommandAsync(cmdText);
             using var reader = await cmd.ExecuteReaderAsync();
 
-            await reader.ReadAsync();
+            if (reader.HasRows)
+            {
+                await reader.ReadAsync();
+                return (int)reader[CustomerCard.COL_PERCENT];
+            }
 
-            return (int)reader[CustomerCard.COL_PERCENT];
+            else
+            {
+                return null;
+            }
+            
         }
     }
 }
